@@ -16,14 +16,28 @@ export type ListingOutput = {
 }
 
 export default function App() {
-  const [credits, setCredits]       = useState<CreditsState | null>(null)
-  const [result, setResult]         = useState<ListingOutput | null>(null)
-  const [loading, setLoading]       = useState(false)
+  const [credits, setCredits]         = useState<CreditsState | null>(null)
+  const [result, setResult]           = useState<ListingOutput | null>(null)
+  const [loading, setLoading]         = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const [error, setError]             = useState<string | null>(null)
+  const [rateLimitSecs, setRateLimitSecs] = useState(0)
   const resultRef = useRef<HTMLDivElement>(null)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => { fetchCredits() }, [])
+
+  // Countdown ticker for rate-limit message
+  useEffect(() => {
+    if (rateLimitSecs <= 0) return
+    countdownRef.current = setInterval(() => {
+      setRateLimitSecs(s => {
+        if (s <= 1) { clearInterval(countdownRef.current!); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(countdownRef.current!)
+  }, [rateLimitSecs])
 
   async function fetchCredits() {
     try {
@@ -33,6 +47,7 @@ export default function App() {
   }
 
   async function handleGenerate(formData: Record<string, string>) {
+    if (rateLimitSecs > 0) return                                    // still cooling down
     const hasCredits = credits && (credits.freeRemaining > 0 || credits.paidCredits > 0)
     if (!hasCredits) { setShowPaywall(true); return }
 
@@ -40,7 +55,6 @@ export default function App() {
     setError(null)
     setResult(null)
 
-    // On mobile, start scrolling toward result area
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 100)
@@ -51,12 +65,20 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
+
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}))
+        const secs = data.retryAfterSeconds ?? 60
+        setRateLimitSecs(secs)
+        setError(`Rate limit reached — 5 per minute. Try again in ${secs}s.`)
+        return
+      }
       if (res.status === 402) { setShowPaywall(true); return }
       if (!res.ok) { setError('Something went wrong. Please try again.'); return }
+
       const data: ListingOutput = await res.json()
       setResult(data)
       await fetchCredits()
-      // Scroll to result on mobile after it appears
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
@@ -115,7 +137,7 @@ export default function App() {
 
           {/* Form */}
           <div className="anim-fade-up anim-d1">
-            <ListingForm onSubmit={handleGenerate} loading={loading} />
+            <ListingForm onSubmit={handleGenerate} loading={loading} rateLimitSecs={rateLimitSecs} />
           </div>
 
           {/* Result */}

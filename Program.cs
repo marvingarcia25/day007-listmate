@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<CreditsService>();
+builder.Services.AddSingleton<RateLimiterService>();
 builder.Services.AddHttpClient<ClaudeService>();
 builder.Services.AddSingleton<ClaudeService>();
 
@@ -40,14 +41,26 @@ app.MapGet("/api/credits", (HttpContext ctx, CreditsService credits) =>
 });
 
 // ── POST /api/generate ────────────────────────────────────────
-app.MapPost("/api/generate", async (HttpContext ctx, GenerateRequest req, ClaudeService claude, CreditsService credits, DatabaseService db) =>
+app.MapPost("/api/generate", async (HttpContext ctx, GenerateRequest req, ClaudeService claude, CreditsService credits, DatabaseService db, RateLimiterService rateLimiter) =>
 {
     var anonId = GetOrCreateAnonId(ctx);
+
+    // Rate limit: 5 per minute per session
+    if (!rateLimiter.TryConsume(anonId))
+    {
+        var info = rateLimiter.GetInfo(anonId);
+        ctx.Response.Headers["X-RateLimit-Limit"]     = info.Limit.ToString();
+        ctx.Response.Headers["X-RateLimit-Remaining"] = "0";
+        ctx.Response.Headers["X-RateLimit-Reset-In"]  = info.SecondsUntilReset.ToString();
+        return Results.Json(
+            new { error = "rate_limited", retryAfterSeconds = info.SecondsUntilReset },
+            statusCode: 429);
+    }
+
     if (!credits.TryConsume(anonId))
-        return Results.StatusCode(402); // Payment Required
+        return Results.StatusCode(402);
 
     db.LogUsage(anonId, null, "generate");
-
     var (title, description) = await claude.GenerateAsync(req);
     return Results.Ok(new { title, description });
 });

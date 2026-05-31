@@ -23,9 +23,10 @@ const DELIVERY_OPTIONS = [
 interface Props {
   onSubmit: (data: Record<string, string>) => void
   loading: boolean
+  rateLimitSecs?: number
 }
 
-export default function ListingForm({ onSubmit, loading }: Props) {
+export default function ListingForm({ onSubmit, loading, rateLimitSecs = 0 }: Props) {
   const [form, setForm] = useState({
     title: '', category: CATEGORIES[0], condition: CONDITIONS[0],
     brand: '', details: '', price: '', delivery: 'pickup', tone: 'friendly',
@@ -132,15 +133,19 @@ export default function ListingForm({ onSubmit, loading }: Props) {
       </div>
 
       {/* CTA */}
-      <button type="submit" disabled={loading}
+      <button type="submit" disabled={loading || rateLimitSecs > 0}
         className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all duration-150 touch-manipulation flex items-center justify-center gap-2 min-h-[52px]"
         style={{
-          background: loading
-            ? 'linear-gradient(135deg, #93C5FD, #60A5FA)'
-            : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-          boxShadow: loading ? 'none' : '0 2px 12px rgba(37,99,235,0.35)',
+          background: rateLimitSecs > 0
+            ? '#94A3B8'
+            : loading
+              ? 'linear-gradient(135deg, #93C5FD, #60A5FA)'
+              : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+          boxShadow: (loading || rateLimitSecs > 0) ? 'none' : '0 2px 12px rgba(37,99,235,0.35)',
         }}>
-        {loading ? (
+        {rateLimitSecs > 0 ? (
+          <>⏳ Rate limited — retry in {rateLimitSecs}s</>
+        ) : loading ? (
           <>
             <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
