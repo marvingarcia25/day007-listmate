@@ -12,8 +12,8 @@ public class ClaudeService
     private const string Model = "claude-haiku-4-5-20251001";
 
     private const string SystemPrompt = """
-        You are an expert Trade Me listing writer for the New Zealand marketplace.
-        Write compelling, honest, conversion-focused listings that follow Trade Me best practices:
+        You are an expert online marketplace listing writer.
+        Write compelling, honest, conversion-focused listings that follow best practices:
         - Title: max 80 characters, keyword-rich, specific (brand, model, condition)
         - Description: hook sentence, bullet features, condition details, pickup/payment info, warm close
         - Tone matches the requested style
@@ -69,7 +69,7 @@ public class ClaudeService
 
     private static string BuildPrompt(GenerateRequest req) =>
         $"""
-        Write a Trade Me listing with a {req.Tone} tone.
+        Write a marketplace listing with a {req.Tone} tone.
         Item: {req.Title}
         Category: {req.Category}
         Condition: {req.Condition}

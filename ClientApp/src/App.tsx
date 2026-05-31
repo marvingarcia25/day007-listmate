@@ -112,13 +112,13 @@ export default function App() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 anim-fade-up">
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">
-            AI Trade Me Listing Writer
+            AI Marketplace Listing Writer
           </p>
           <h1 className="font-extrabold text-2xl sm:text-3xl text-slate-900 leading-tight mb-1.5">
             Write a great listing<br className="sm:hidden" /> in seconds
           </h1>
           <p className="text-sm text-slate-500 leading-relaxed max-w-md">
-            Describe what you're selling — AI writes a catchy title and compelling description, ready to paste into Trade Me.
+            Describe what you're selling — AI writes a catchy title and compelling description, ready to paste into any marketplace.
           </p>
           <div className="flex flex-wrap gap-3 mt-3">
             {['3 free listings', 'No signup', 'Copy in one click'].map(t => (
