@@ -19,7 +19,7 @@ jobs:
       - name: Build React app
         run: |
           cd ClientApp
-          npm ci
+          npm install --legacy-peer-deps
           npm run build
 
       - name: Setup .NET
