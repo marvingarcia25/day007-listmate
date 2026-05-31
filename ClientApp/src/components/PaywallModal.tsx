@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 const PACKS = [
-  { id: 'pack_20',  credits: 20,  price: 5,  edition: 'Standard',  perListing: '25¢' },
-  { id: 'pack_50',  credits: 50,  price: 10, edition: 'Value',     perListing: '20¢', featured: true },
-  { id: 'pack_120', credits: 120, price: 20, edition: 'Press Run', perListing: '17¢' },
+  { id: 'pack_20',  credits: 20,  price: 5,  label: 'Starter',    each: '25¢/listing' },
+  { id: 'pack_50',  credits: 50,  price: 10, label: 'Value',      each: '20¢/listing', best: true },
+  { id: 'pack_120', credits: 120, price: 20, label: 'Power user', each: '17¢/listing' },
 ]
 
 interface Props {
@@ -26,9 +26,9 @@ export default function PaywallModal({ onClose, onPurchased }: Props) {
         body: JSON.stringify({ packId: selected, email }),
       })
       const data = await res.json()
-      if (data.url)        { window.location.href = data.url }
-      else if (data.simulated) { onPurchased() }
-      else { setError('Something went wrong.') }
+      if (data.url)        window.location.href = data.url
+      else if (data.simulated) onPurchased()
+      else setError('Something went wrong.')
     } catch { setError('Network error.') }
     finally  { setLoading(false) }
   }
@@ -36,93 +36,94 @@ export default function PaywallModal({ onClose, onPurchased }: Props) {
   const pack = PACKS.find(p => p.id === selected)!
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(13,12,10,0.88)', backdropFilter: 'blur(4px)' }}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
 
-      <div className="w-full max-w-md anim-fade-up"
-        style={{ background: '#171512', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="w-full sm:max-w-[400px] bg-white sm:rounded-2xl rounded-t-3xl anim-slide-up pb-safe"
+        style={{ boxShadow: '0 -4px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)' }}>
 
-        {/* Masthead-style header */}
-        <div className="px-6 pt-6 pb-4">
-          <div style={{ borderTop: '3px double #E8A020', marginBottom: '0.75rem' }} />
-          <div className="flex items-start justify-between">
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-9 h-1 rounded-full bg-slate-200" />
+        </div>
+
+        <div className="p-5 sm:p-6">
+
+          {/* Header */}
+          <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="font-body text-xs uppercase tracking-widest font-medium mb-1" style={{ color: '#E8A020' }}>
-                Premium Access
+              <h2 className="font-bold text-xl text-slate-900">Get more listings</h2>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Your 3 free listings are used. Credits never expire.
               </p>
-              <h2 className="font-display font-black text-3xl leading-tight" style={{ color: '#EDE5D8' }}>
-                Buy More<br />Listings
-              </h2>
             </div>
             <button onClick={onClose}
-              className="font-body text-xs uppercase tracking-widest mt-1 px-2 py-1 border transition-all"
-              style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#7A7268' }}>
-              Close ×
+              className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors touch-manipulation">
+              ×
             </button>
           </div>
-          <p className="font-body text-sm mt-2 leading-relaxed" style={{ color: '#7A7268' }}>
-            Your 3 free listings are gone. Pick a credit pack — they never expire.
-          </p>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '1rem' }} />
-        </div>
 
-        {/* Credit packs */}
-        <div className="px-6 pb-4 flex flex-col gap-2">
-          {PACKS.map(p => (
-            <button key={p.id} onClick={() => setSelected(p.id)}
-              className="relative w-full text-left px-4 py-3.5 border transition-all duration-150"
-              style={{
-                borderColor: selected === p.id ? '#E8A020' : 'rgba(255,255,255,0.08)',
-                background:  selected === p.id ? 'rgba(232,160,32,0.06)' : 'rgba(255,255,255,0.02)',
-              }}>
-              {p.featured && (
-                <span className="absolute top-2.5 right-3 font-mono text-xs uppercase tracking-widest"
-                  style={{ color: '#E8A020' }}>★ best value</span>
-              )}
-              <div className="flex items-center justify-between">
+          {/* Pack selector */}
+          <div className="flex flex-col gap-2 my-5">
+            {PACKS.map(p => (
+              <button key={p.id} type="button" onClick={() => setSelected(p.id)}
+                className="relative flex items-center justify-between w-full px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-150 touch-manipulation"
+                style={{
+                  borderColor: selected === p.id ? '#2563EB' : '#E2E8F0',
+                  background:  selected === p.id ? '#EFF6FF' : '#FAFAFA',
+                }}>
+                {p.best && (
+                  <span className="absolute -top-2 left-4 text-xs font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                    Best value
+                  </span>
+                )}
                 <div>
-                  <span className="font-body text-xs uppercase tracking-widest font-medium mr-2" style={{ color: '#7A7268' }}>
-                    {p.edition}
-                  </span>
-                  <span className="font-display font-bold text-base" style={{ color: '#EDE5D8' }}>
-                    {p.credits} listings
-                  </span>
+                  <span className="font-semibold text-slate-900 text-sm">{p.credits} listings</span>
+                  <span className="text-slate-400 text-xs ml-2">{p.each}</span>
                 </div>
-                <div className="text-right">
-                  <div className="font-display font-bold text-xl" style={{ color: '#EDE5D8' }}>${p.price}</div>
-                  <div className="font-mono text-xs" style={{ color: '#504A44' }}>{p.perListing} each</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900">${p.price} NZD</span>
+                  <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                    style={{ borderColor: selected === p.id ? '#2563EB' : '#CBD5E1' }}>
+                    {selected === p.id && (
+                      <div className="w-2 h-2 rounded-full bg-blue-600" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
 
-        {/* Email + buy */}
-        <div className="px-6 pb-6">
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginBottom: '1rem' }} />
-
-          <label className="label-ink">Your Email — credits are linked to this</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="input-ink px-3.5 py-2.5 w-full mb-4" />
+          {/* Email */}
+          <div className="mb-4">
+            <label className="field-label">
+              Email — credits linked to this address
+            </label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="field-input" />
+          </div>
 
           {error && (
-            <p className="font-body text-xs mb-3" style={{ color: '#C4382A' }}>{error}</p>
+            <p className="text-red-500 text-xs font-medium mb-3">{error}</p>
           )}
 
           <button onClick={handleBuy} disabled={loading}
-            className="w-full py-3.5 font-body font-semibold text-sm uppercase tracking-widest transition-all"
+            className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all duration-150 touch-manipulation min-h-[52px]"
             style={{
-              background: loading ? 'rgba(232,160,32,0.5)' : '#E8A020',
-              color: '#0D0C0A',
+              background: loading
+                ? 'linear-gradient(135deg, #93C5FD, #60A5FA)'
+                : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+              boxShadow: loading ? 'none' : '0 2px 12px rgba(37,99,235,0.35)',
             }}>
-            {loading ? 'Redirecting…' : `Pay $${pack.price} for ${pack.credits} listings →`}
+            {loading ? 'Redirecting…' : `Pay $${pack.price} → ${pack.credits} listings`}
           </button>
 
-          <p className="font-mono text-xs text-center mt-3" style={{ color: '#3E3A34' }}>
+          <p className="text-center text-xs text-slate-400 mt-3">
             Secure payment via Stripe · Credits never expire
           </p>
+
         </div>
       </div>
     </div>

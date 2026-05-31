@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ListingForm from './components/ListingForm'
 import ListingResult from './components/ListingResult'
 import CreditBadge from './components/CreditBadge'
@@ -16,11 +16,12 @@ export type ListingOutput = {
 }
 
 export default function App() {
-  const [credits, setCredits] = useState<CreditsState | null>(null)
-  const [result, setResult] = useState<ListingOutput | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [credits, setCredits]       = useState<CreditsState | null>(null)
+  const [result, setResult]         = useState<ListingOutput | null>(null)
+  const [loading, setLoading]       = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError]           = useState<string | null>(null)
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { fetchCredits() }, [])
 
@@ -39,6 +40,11 @@ export default function App() {
     setError(null)
     setResult(null)
 
+    // On mobile, start scrolling toward result area
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -47,8 +53,13 @@ export default function App() {
       })
       if (res.status === 402) { setShowPaywall(true); return }
       if (!res.ok) { setError('Something went wrong. Please try again.'); return }
-      setResult(await res.json())
+      const data: ListingOutput = await res.json()
+      setResult(data)
       await fetchCredits()
+      // Scroll to result on mobile after it appears
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -57,82 +68,72 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
 
-      {/* ── MASTHEAD ──────────────────────────────────────────── */}
-      <header className="px-6 pt-8 pb-0 max-w-7xl mx-auto w-full">
-
-        <div className="anim-fade-up">
-          {/* Top rule */}
-          <div className="amber-rule mb-3" />
-
-          {/* Brand row */}
-          <div className="flex items-end justify-between gap-4 mb-3">
-            <div className="flex items-baseline gap-4">
-              <h1 className="font-display font-black text-5xl sm:text-6xl leading-none tracking-tight"
-                style={{ color: '#EDE5D8' }}>
-                List<span style={{ color: '#E8A020' }}>Mate</span>
-              </h1>
-              <div className="hidden sm:block">
-                <div className="text-xs font-body font-medium uppercase tracking-widest" style={{ color: '#7A7268' }}>
-                  Vol. VII · Est. 2026
-                </div>
-                <div className="text-xs font-body font-medium uppercase tracking-widest" style={{ color: '#7A7268' }}>
-                  Trade Me Edition
-                </div>
-              </div>
+      {/* ── STICKY HEADER ─────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 pt-safe">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}>
+              L
             </div>
-            <div className="anim-fade-up anim-delay-2 flex-shrink-0">
-              <CreditBadge credits={credits} onBuy={() => setShowPaywall(true)} />
-            </div>
+            <span className="font-bold text-base tracking-tight text-slate-900">
+              List<span className="text-blue-600">Mate</span>
+            </span>
           </div>
-
-          {/* Bottom rule + tagline */}
-          <div className="amber-rule-double" />
-          <div className="flex items-center justify-between py-2">
-            <p className="font-body text-xs uppercase tracking-widest" style={{ color: '#7A7268' }}>
-              AI–powered classified writer · NZD · No signup required
-            </p>
-            <p className="font-body text-xs uppercase tracking-widest hidden md:block" style={{ color: '#504A44' }}>
-              ✦ Write · Polish · Publish ✦
-            </p>
-          </div>
-          <div className="ink-rule" />
+          <CreditBadge credits={credits} onBuy={() => setShowPaywall(true)} />
         </div>
       </header>
 
-      {/* ── BODY ──────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-0">
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 anim-fade-up">
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">
+            AI Trade Me Listing Writer
+          </p>
+          <h1 className="font-extrabold text-2xl sm:text-3xl text-slate-900 leading-tight mb-1.5">
+            Write a great listing<br className="sm:hidden" /> in seconds
+          </h1>
+          <p className="text-sm text-slate-500 leading-relaxed max-w-md">
+            Describe what you're selling — AI writes a catchy title and compelling description, ready to paste into Trade Me.
+          </p>
+          <div className="flex flex-wrap gap-3 mt-3">
+            {['3 free listings', 'No signup', 'Copy in one click'].map(t => (
+              <span key={t} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
 
-          {/* LEFT — Form */}
-          <div className="col-rule-right pr-0 lg:pr-8 anim-fade-up anim-delay-2">
-            <div className="sticky top-6">
-              <ListingForm onSubmit={handleGenerate} loading={loading} />
-            </div>
+      {/* ── MAIN ─────────────────────────────────────────────── */}
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-5 sm:py-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.1fr] gap-5">
+
+          {/* Form */}
+          <div className="anim-fade-up anim-d1">
+            <ListingForm onSubmit={handleGenerate} loading={loading} />
           </div>
 
-          {/* RIGHT — Result */}
-          <div className="pl-0 lg:pl-8 pt-8 lg:pt-0 anim-fade-up anim-delay-3">
+          {/* Result */}
+          <div ref={resultRef} className="anim-fade-up anim-d2">
             <ListingResult result={result} loading={loading} error={error} />
           </div>
 
         </div>
       </main>
 
-      {/* ── FOOTER ────────────────────────────────────────────── */}
-      <footer className="max-w-7xl mx-auto w-full px-6 pb-8">
-        <div className="ink-rule pt-4 flex items-center justify-between">
-          <span className="font-body text-xs uppercase tracking-widest" style={{ color: '#3E3A34' }}>
-            Day 007 · 1000-day challenge
-          </span>
-          <span className="font-body text-xs uppercase tracking-widest" style={{ color: '#3E3A34' }}>
-            ASP.NET Core + React + Claude
-          </span>
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer className="border-t border-slate-200 bg-white pb-safe">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="text-xs text-slate-400">Day 007 · 1000-day challenge</span>
+          <span className="text-xs text-slate-400">ASP.NET Core + React + Claude AI</span>
         </div>
       </footer>
 
-      {/* ── PAYWALL ───────────────────────────────────────────── */}
       {showPaywall && (
         <PaywallModal
           onClose={() => setShowPaywall(false)}

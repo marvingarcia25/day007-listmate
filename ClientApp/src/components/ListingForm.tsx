@@ -9,9 +9,15 @@ const CATEGORIES = [
 const CONDITIONS = ['New', 'Like new', 'Good', 'Fair', 'Used for parts']
 
 const TONES = [
-  { value: 'friendly',     label: 'Friendly',     glyph: '◎' },
-  { value: 'professional', label: 'Professional',  glyph: '◆' },
-  { value: 'punchy',       label: 'Punchy',        glyph: '▲' },
+  { value: 'friendly',     emoji: '😊', label: 'Friendly'     },
+  { value: 'professional', emoji: '💼', label: 'Professional'  },
+  { value: 'punchy',       emoji: '⚡', label: 'Punchy'        },
+]
+
+const DELIVERY_OPTIONS = [
+  { value: 'pickup',   label: 'Pickup only'       },
+  { value: 'shipping', label: 'Shipping available' },
+  { value: 'both',     label: 'Pickup or ship'    },
 ]
 
 interface Props {
@@ -25,144 +31,137 @@ export default function ListingForm({ onSubmit, loading }: Props) {
     brand: '', details: '', price: '', delivery: 'pickup', tone: 'friendly',
   })
 
-  const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
-
-  const handleSubmit = (e: FormEvent) => { e.preventDefault(); onSubmit(form) }
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+  const onSubmitForm = (e: FormEvent) => { e.preventDefault(); onSubmit(form) }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmitForm} className="card p-4 sm:p-5 flex flex-col gap-4">
 
-      {/* Section heading */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="font-body text-xs uppercase tracking-widest font-medium" style={{ color: '#E8A020' }}>
-            § Submit Ad Details
-          </span>
-        </div>
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+      <h2 className="font-bold text-base text-slate-800">What are you selling?</h2>
+
+      {/* Item name */}
+      <div>
+        <label className="field-label">Item name *</label>
+        <input required value={form.title} onChange={e => set('title', e.target.value)}
+          placeholder="e.g. Sony WH-1000XM4 headphones"
+          className="field-input" />
       </div>
 
-      <div className="flex flex-col gap-5">
-
-        {/* Item name */}
+      {/* Category + Condition — 2 col on all sizes (narrow enough) */}
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label-ink">Item Name *</label>
-          <input required value={form.title} onChange={e => set('title', e.target.value)}
-            placeholder="e.g. Sony WH-1000XM4 headphones"
-            className="input-ink px-3.5 py-2.5 w-full" />
-        </div>
-
-        {/* Category + Condition */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label-ink">Category</label>
+          <label className="field-label">Category</label>
+          <div className="relative">
             <select value={form.category} onChange={e => set('category', e.target.value)}
-              className="input-ink px-3 py-2.5 w-full cursor-pointer">
+              className="field-input pr-8 cursor-pointer">
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
+            <ChevronIcon />
           </div>
-          <div>
-            <label className="label-ink">Condition</label>
+        </div>
+        <div>
+          <label className="field-label">Condition</label>
+          <div className="relative">
             <select value={form.condition} onChange={e => set('condition', e.target.value)}
-              className="input-ink px-3 py-2.5 w-full cursor-pointer">
+              className="field-input pr-8 cursor-pointer">
               {CONDITIONS.map(c => <option key={c}>{c}</option>)}
             </select>
+            <ChevronIcon />
           </div>
         </div>
-
-        {/* Brand */}
-        <div>
-          <label className="label-ink">
-            Brand <span className="normal-case" style={{ color: '#504A44' }}>— optional</span>
-          </label>
-          <input value={form.brand} onChange={e => set('brand', e.target.value)}
-            placeholder="e.g. Sony, Apple, IKEA"
-            className="input-ink px-3.5 py-2.5 w-full" />
-        </div>
-
-        {/* Key details */}
-        <div>
-          <label className="label-ink">Key Details *</label>
-          <textarea required value={form.details} onChange={e => set('details', e.target.value)}
-            rows={5} placeholder="Describe condition, what's included, any flaws, reason for selling…"
-            className="input-ink px-3.5 py-2.5 w-full resize-none leading-relaxed" />
-        </div>
-
-        {/* Price + Delivery */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label-ink">Asking Price (NZD)</label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-sm font-medium" style={{ color: '#7A7268' }}>$</span>
-              <input type="number" min="0" step="1" value={form.price}
-                onChange={e => set('price', e.target.value)} placeholder="0"
-                className="input-ink pl-7 pr-3.5 py-2.5 w-full" />
-            </div>
-          </div>
-          <div>
-            <label className="label-ink">Delivery</label>
-            <select value={form.delivery} onChange={e => set('delivery', e.target.value)}
-              className="input-ink px-3 py-2.5 w-full cursor-pointer">
-              <option value="pickup">Pickup only</option>
-              <option value="shipping">Shipping available</option>
-              <option value="both">Pickup or ship</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tone */}
-        <div>
-          <label className="label-ink">Writing Tone</label>
-          <div className="flex gap-2">
-            {TONES.map(t => (
-              <button key={t.value} type="button" onClick={() => set('tone', t.value)}
-                className="flex-1 py-2.5 px-3 text-center text-xs font-body font-medium uppercase tracking-wider transition-all duration-150 rounded-sm border"
-                style={{
-                  borderColor: form.tone === t.value ? '#E8A020' : 'rgba(255,255,255,0.08)',
-                  background:  form.tone === t.value ? 'rgba(232,160,32,0.10)' : 'rgba(255,255,255,0.03)',
-                  color:       form.tone === t.value ? '#E8A020' : '#7A7268',
-                }}>
-                <span className="block text-base mb-0.5">{t.glyph}</span>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Submit */}
-        <button type="submit" disabled={loading}
-          className="relative w-full py-3.5 text-sm font-body font-semibold uppercase tracking-widest transition-all duration-200 overflow-hidden"
-          style={{
-            background:   loading ? 'rgba(232,160,32,0.5)' : '#E8A020',
-            color:        '#0D0C0A',
-            letterSpacing:'0.14em',
-          }}>
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="inline-flex gap-1">
-                {[0,1,2].map(i => (
-                  <span key={i} className="inline-block w-1 h-1 rounded-full"
-                    style={{
-                      background: '#0D0C0A',
-                      animation: `bounce 0.8s ${i * 0.15}s ease-in-out infinite`,
-                    }} />
-                ))}
-              </span>
-              Setting type…
-            </span>
-          ) : (
-            <>Write My Listing <span className="ml-1">→</span></>
-          )}
-        </button>
-
       </div>
 
-      <style>{`
-        @keyframes bounce {
-          0%,100% { transform: translateY(0); }
-          50%      { transform: translateY(-4px); }
-        }
-      `}</style>
+      {/* Brand */}
+      <div>
+        <label className="field-label">
+          Brand <span className="font-normal text-slate-400">(optional)</span>
+        </label>
+        <input value={form.brand} onChange={e => set('brand', e.target.value)}
+          placeholder="e.g. Sony, Apple, IKEA"
+          className="field-input" />
+      </div>
+
+      {/* Key details */}
+      <div>
+        <label className="field-label">Key details *</label>
+        <textarea required value={form.details} onChange={e => set('details', e.target.value)}
+          rows={4} placeholder="Condition, what's included, any flaws, why you're selling…"
+          className="field-input resize-none leading-relaxed" />
+      </div>
+
+      {/* Price + Delivery */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="field-label">Price (NZD)</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400 pointer-events-none">$</span>
+            <input type="number" min="0" step="1" value={form.price}
+              onChange={e => set('price', e.target.value)} placeholder="0"
+              className="field-input pl-7" />
+          </div>
+        </div>
+        <div>
+          <label className="field-label">Delivery</label>
+          <div className="relative">
+            <select value={form.delivery} onChange={e => set('delivery', e.target.value)}
+              className="field-input pr-8 cursor-pointer">
+              {DELIVERY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <ChevronIcon />
+          </div>
+        </div>
+      </div>
+
+      {/* Tone */}
+      <div>
+        <label className="field-label">Writing tone</label>
+        <div className="grid grid-cols-3 gap-2">
+          {TONES.map(t => (
+            <button key={t.value} type="button" onClick={() => set('tone', t.value)}
+              className="flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all duration-150 touch-manipulation"
+              style={{
+                borderColor: form.tone === t.value ? '#2563EB' : '#E2E8F0',
+                background:  form.tone === t.value ? '#EFF6FF' : '#FAFAFA',
+                color:       form.tone === t.value ? '#2563EB' : '#64748B',
+              }}>
+              <span className="text-lg leading-none">{t.emoji}</span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <button type="submit" disabled={loading}
+        className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all duration-150 touch-manipulation flex items-center justify-center gap-2 min-h-[52px]"
+        style={{
+          background: loading
+            ? 'linear-gradient(135deg, #93C5FD, #60A5FA)'
+            : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+          boxShadow: loading ? 'none' : '0 2px 12px rgba(37,99,235,0.35)',
+        }}>
+        {loading ? (
+          <>
+            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Writing your listing…
+          </>
+        ) : (
+          <><span>✨</span> Write my listing</>
+        )}
+      </button>
+
     </form>
+  )
+}
+
+function ChevronIcon() {
+  return (
+    <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+      style={{ color: '#94A3B8' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
   )
 }

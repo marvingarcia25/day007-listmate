@@ -4,24 +4,28 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        body:    ['Outfit', 'system-ui', 'sans-serif'],
-        mono:    ['"DM Mono"', 'Menlo', 'monospace'],
+        sans:    ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', 'Menlo', 'monospace'],
       },
       colors: {
-        ink: {
-          950: '#0D0C0A',
-          900: '#171512',
-          800: '#201E1A',
-          700: '#2C2924',
-          600: '#3E3A34',
-          400: '#7A7268',
-          200: '#B8B0A4',
-          100: '#D8D0C4',
+        brand: {
+          50:  '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
         },
-        cream:  '#EDE5D8',
-        amber:  '#E8A020',
-        scarlet:'#C4382A',
+      },
+      boxShadow: {
+        'card': '0 1px 4px 0 rgba(0,0,0,0.06), 0 4px 16px 0 rgba(0,0,0,0.04)',
+        'card-hover': '0 4px 12px 0 rgba(0,0,0,0.10), 0 8px 32px 0 rgba(0,0,0,0.06)',
+        'glow': '0 0 0 3px rgba(37,99,235,0.15)',
+      },
+      borderRadius: {
+        'xl2': '1rem',
+        'xl3': '1.25rem',
       },
     },
   },
