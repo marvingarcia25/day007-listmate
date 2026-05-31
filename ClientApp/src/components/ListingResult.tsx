@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ListingOutput } from '../App'
 
 interface Props {
@@ -7,7 +7,7 @@ interface Props {
   error: string | null
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)
   function copy() {
     navigator.clipboard.writeText(text)
@@ -16,9 +16,37 @@ function CopyButton({ text }: { text: string }) {
   }
   return (
     <button onClick={copy}
-      className="text-xs font-semibold text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 rounded-lg px-2.5 py-1 transition">
-      {copied ? '✓ Copied!' : 'Copy'}
+      className="text-xs font-body font-medium uppercase tracking-widest px-3 py-1.5 border transition-all duration-150"
+      style={{
+        borderColor: copied ? '#E8A020' : 'rgba(255,255,255,0.12)',
+        color:       copied ? '#E8A020' : '#7A7268',
+        background:  copied ? 'rgba(232,160,32,0.08)' : 'transparent',
+      }}>
+      {copied ? '✓ Copied' : label}
     </button>
+  )
+}
+
+function TypewriterText({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  const idx = useRef(0)
+
+  useEffect(() => {
+    idx.current = 0
+    setDisplayed('')
+    setDone(false)
+    const interval = setInterval(() => {
+      if (idx.current >= text.length) { clearInterval(interval); setDone(true); return }
+      setDisplayed(text.slice(0, ++idx.current))
+    }, 12)
+    return () => clearInterval(interval)
+  }, [text])
+
+  return (
+    <span className={done ? '' : 'cursor-amber'}>
+      {displayed}
+    </span>
   )
 }
 
@@ -26,65 +54,120 @@ export default function ListingResult({ result, loading, error }: Props) {
   const isEmpty = !result && !loading && !error
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 min-h-[420px]">
+    <div className="min-h-[500px] flex flex-col">
 
-      <h2 className="font-display font-bold text-lg text-slate-800">Your listing</h2>
+      {/* Section heading */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="font-body text-xs uppercase tracking-widest font-medium" style={{ color: '#E8A020' }}>
+            § Your Classified
+          </span>
+        </div>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} />
+      </div>
 
+      {/* Empty state */}
       {isEmpty && (
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📝</div>
-          <p className="text-slate-400 text-sm max-w-xs">
-            Fill in the form and hit <strong>"Write my listing"</strong> — your Trade Me-ready listing will appear here.
-          </p>
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map(i => (
-              <div key={i} className="w-2 h-2 rounded-full bg-teal-500 animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }} />
-            ))}
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 py-16">
+          <div className="font-display font-bold text-6xl leading-none" style={{ color: '#2C2924' }}>
+            AD
           </div>
-          <p className="text-slate-400 text-sm">AI is writing your listing…</p>
+          <div style={{ borderTop: '1px solid #2C2924', width: '3rem' }} />
+          <p className="font-body text-sm max-w-xs leading-relaxed" style={{ color: '#504A44' }}>
+            Fill in the form and submit your details — your classified will be set in type and printed here.
+          </p>
+          <div className="font-mono text-xs uppercase tracking-widest mt-2" style={{ color: '#3E3A34' }}>
+            Ready to print
+          </div>
         </div>
       )}
 
+      {/* Loading */}
+      {loading && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+          {/* Animated press visual */}
+          <div className="relative">
+            <div className="font-display font-black text-7xl leading-none select-none"
+              style={{ color: '#201E1A', animation: 'pressType 1.2s ease-in-out infinite' }}>
+              ◆
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="font-display font-black text-7xl leading-none"
+                style={{ color: '#E8A020', opacity: 0.15 }}>◆</div>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="font-mono text-xs uppercase tracking-widest" style={{ color: '#7A7268' }}>
+              Setting type
+              <span style={{ animation: 'blink 1s step-end infinite' }}>…</span>
+            </p>
+          </div>
+          <style>{`
+            @keyframes pressType {
+              0%,100% { transform: scaleY(1) scaleX(1); }
+              50%      { transform: scaleY(0.96) scaleX(1.02); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Error */}
       {error && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 text-sm text-center">
+        <div className="flex items-center justify-center flex-1">
+          <div className="border px-6 py-4 text-sm font-body text-center"
+            style={{ borderColor: '#C4382A', color: '#C4382A', background: 'rgba(196,56,42,0.06)' }}>
             {error}
           </div>
         </div>
       )}
 
+      {/* Result — newspaper classified format */}
       {result && (
-        <div className="flex flex-col gap-4 flex-1">
+        <div className="flex flex-col gap-5 anim-result">
 
-          {/* Title */}
-          <div className="rounded-xl bg-teal-50 border border-teal-100 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-teal-700 uppercase tracking-wide">Listing Title</span>
+          {/* Title block */}
+          <div className="relative p-5 border amber-glow"
+            style={{ borderColor: '#E8A020', background: 'rgba(232,160,32,0.04)' }}>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <span className="font-body text-xs uppercase tracking-widest font-medium" style={{ color: '#E8A020' }}>
+                Listing Title
+              </span>
               <CopyButton text={result.title} />
             </div>
-            <p className="text-slate-800 font-semibold text-base leading-snug">{result.title}</p>
-            <p className="text-xs text-teal-600 mt-1">{result.title.length}/80 chars</p>
+            <p className="font-display font-bold text-xl sm:text-2xl leading-snug" style={{ color: '#EDE5D8' }}>
+              <TypewriterText text={result.title} />
+            </p>
+            <p className="mt-2 font-mono text-xs" style={{ color: '#504A44' }}>
+              {result.title.length} / 80 characters
+              {result.title.length > 70 && <span style={{ color: '#E8A020' }}> — near limit</span>}
+            </p>
+
+            {/* Corner mark */}
+            <div className="absolute top-3 right-3 font-body text-xs" style={{ color: '#3E3A34' }}>✦</div>
           </div>
 
-          {/* Description */}
-          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
+          {/* Description block */}
+          <div className="border p-5 flex-1"
+            style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-body text-xs uppercase tracking-widest font-medium" style={{ color: '#7A7268' }}>
+                Description
+              </span>
               <CopyButton text={result.description} />
             </div>
-            <pre className="text-slate-700 text-sm whitespace-pre-wrap font-sans leading-relaxed">
-              {result.description}
+            <pre className="font-mono text-sm leading-relaxed whitespace-pre-wrap"
+              style={{ color: '#C8C0B4', fontFamily: '"DM Mono", Menlo, monospace' }}>
+              <TypewriterText text={result.description} />
             </pre>
           </div>
 
           {/* Copy all */}
-          <CopyButton text={`${result.title}\n\n${result.description}`} />
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs uppercase tracking-widest" style={{ color: '#504A44' }}>
+              ◆ Ready to paste into Trade Me
+            </span>
+            <CopyButton text={`${result.title}\n\n${result.description}`} label="Copy All" />
+          </div>
 
         </div>
       )}

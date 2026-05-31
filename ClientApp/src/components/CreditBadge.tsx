@@ -9,27 +9,40 @@ export default function CreditBadge({ credits, onBuy }: Props) {
   if (!credits) return null
 
   const total = credits.freeRemaining + credits.paidCredits
-  const label = credits.freeRemaining > 0
-    ? `${credits.freeRemaining} free left`
-    : `${credits.paidCredits} credits`
-
-  const isLow = total <= 1
+  const isFree = credits.freeRemaining > 0
   const isEmpty = total === 0
 
   return (
-    <div className="flex items-center gap-2">
-      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-        isEmpty
-          ? 'bg-red-100 text-red-600'
-          : isLow
-            ? 'bg-amber-100 text-amber-700'
-            : 'bg-teal-100 text-teal-700'
-      }`}>
-        {isEmpty ? 'No credits' : label}
-      </span>
+    <div className="flex items-center gap-3">
+      <div className="text-right hidden sm:block">
+        <div className="font-mono text-xs uppercase tracking-widest"
+          style={{ color: isEmpty ? '#C4382A' : isFree ? '#E8A020' : '#7A7268' }}>
+          {isEmpty
+            ? '— out of credits —'
+            : isFree
+              ? `${credits.freeRemaining} free remaining`
+              : `${credits.paidCredits} credits`}
+        </div>
+        {!isEmpty && (
+          <div className="font-body text-xs mt-0.5" style={{ color: '#504A44' }}>
+            {isFree ? 'no account needed' : `linked: ${credits.email}`}
+          </div>
+        )}
+      </div>
       <button onClick={onBuy}
-        className="text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-full transition">
-        Buy credits
+        className="font-body font-semibold text-xs uppercase tracking-widest px-4 py-2 border transition-all duration-150"
+        style={{
+          borderColor: '#E8A020',
+          color:       '#E8A020',
+          background:  'transparent',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.background = 'rgba(232,160,32,0.12)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.background = 'transparent'
+        }}>
+        {isEmpty ? 'Buy Credits →' : '+ Buy More'}
       </button>
     </div>
   )

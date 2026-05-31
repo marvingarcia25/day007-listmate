@@ -47,8 +47,7 @@ export default function App() {
       })
       if (res.status === 402) { setShowPaywall(true); return }
       if (!res.ok) { setError('Something went wrong. Please try again.'); return }
-      const data: ListingOutput = await res.json()
-      setResult(data)
+      setResult(await res.json())
       await fetchCredits()
     } catch {
       setError('Network error. Please try again.')
@@ -58,53 +57,82 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50/30">
+    <div className="min-h-screen flex flex-col">
 
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white text-sm font-bold">L</div>
-            <span className="font-display font-bold text-lg text-slate-800">
-              List<span className="text-teal-600">Mate</span>
-            </span>
-            <span className="hidden sm:block text-xs text-slate-400 ml-1">AI Trade Me Listings</span>
+      {/* ── MASTHEAD ──────────────────────────────────────────── */}
+      <header className="px-6 pt-8 pb-0 max-w-7xl mx-auto w-full">
+
+        <div className="anim-fade-up">
+          {/* Top rule */}
+          <div className="amber-rule mb-3" />
+
+          {/* Brand row */}
+          <div className="flex items-end justify-between gap-4 mb-3">
+            <div className="flex items-baseline gap-4">
+              <h1 className="font-display font-black text-5xl sm:text-6xl leading-none tracking-tight"
+                style={{ color: '#EDE5D8' }}>
+                List<span style={{ color: '#E8A020' }}>Mate</span>
+              </h1>
+              <div className="hidden sm:block">
+                <div className="text-xs font-body font-medium uppercase tracking-widest" style={{ color: '#7A7268' }}>
+                  Vol. VII · Est. 2026
+                </div>
+                <div className="text-xs font-body font-medium uppercase tracking-widest" style={{ color: '#7A7268' }}>
+                  Trade Me Edition
+                </div>
+              </div>
+            </div>
+            <div className="anim-fade-up anim-delay-2 flex-shrink-0">
+              <CreditBadge credits={credits} onBuy={() => setShowPaywall(true)} />
+            </div>
           </div>
-          <CreditBadge credits={credits} onBuy={() => setShowPaywall(true)} />
+
+          {/* Bottom rule + tagline */}
+          <div className="amber-rule-double" />
+          <div className="flex items-center justify-between py-2">
+            <p className="font-body text-xs uppercase tracking-widest" style={{ color: '#7A7268' }}>
+              AI–powered classified writer · NZD · No signup required
+            </p>
+            <p className="font-body text-xs uppercase tracking-widest hidden md:block" style={{ color: '#504A44' }}>
+              ✦ Write · Polish · Publish ✦
+            </p>
+          </div>
+          <div className="ink-rule" />
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      {/* ── BODY ──────────────────────────────────────────────── */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-0">
 
-        {/* Hero */}
-        <div className="text-center mb-10">
-          <h1 className="font-display font-bold text-4xl sm:text-5xl text-slate-900 mb-3 leading-tight">
-            Write Trade Me listings<br />
-            <span className="text-teal-600">in seconds</span>
-          </h1>
-          <p className="text-slate-500 text-lg max-w-lg mx-auto">
-            Describe what you're selling. AI writes a catchy title and compelling description — ready to paste.
-          </p>
-          <div className="flex items-center justify-center gap-4 mt-4 text-sm text-slate-400">
-            <span>✓ 3 free listings</span>
-            <span>✓ No signup</span>
-            <span>✓ Copy in one click</span>
+          {/* LEFT — Form */}
+          <div className="col-rule-right pr-0 lg:pr-8 anim-fade-up anim-delay-2">
+            <div className="sticky top-6">
+              <ListingForm onSubmit={handleGenerate} loading={loading} />
+            </div>
           </div>
-        </div>
 
-        {/* Main two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ListingForm onSubmit={handleGenerate} loading={loading} />
-          <ListingResult result={result} loading={loading} error={error} />
-        </div>
+          {/* RIGHT — Result */}
+          <div className="pl-0 lg:pl-8 pt-8 lg:pt-0 anim-fade-up anim-delay-3">
+            <ListingResult result={result} loading={loading} error={error} />
+          </div>
 
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center text-xs text-slate-400 py-8 mt-4">
-        Day 007 · 1000-day challenge · Built with ASP.NET Core + React
+      {/* ── FOOTER ────────────────────────────────────────────── */}
+      <footer className="max-w-7xl mx-auto w-full px-6 pb-8">
+        <div className="ink-rule pt-4 flex items-center justify-between">
+          <span className="font-body text-xs uppercase tracking-widest" style={{ color: '#3E3A34' }}>
+            Day 007 · 1000-day challenge
+          </span>
+          <span className="font-body text-xs uppercase tracking-widest" style={{ color: '#3E3A34' }}>
+            ASP.NET Core + React + Claude
+          </span>
+        </div>
       </footer>
 
+      {/* ── PAYWALL ───────────────────────────────────────────── */}
       {showPaywall && (
         <PaywallModal
           onClose={() => setShowPaywall(false)}
